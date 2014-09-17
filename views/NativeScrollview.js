@@ -4,6 +4,7 @@ define(function(require, exports, module) {
     var ContainerSurface    = require('famous/surfaces/ContainerSurface');
     var Transform           = require('famous/core/Transform');
     var OptionsManager      = require('famous/core/OptionsManager');
+    var Utility             = require('famous/utilities/Utility');
 
     // NOTE: This class in its current state will only 
     // work with appMode disabled like so:
@@ -28,13 +29,9 @@ define(function(require, exports, module) {
         this.options = Object.create(NativeScrollview.DEFAULT_OPTIONS);
         this._optionsManager = new OptionsManager(this.options);
 
-        this._animating = 0;
-        this._scrollX = new Transitionable(0);
-        this._scrollY = new Transitionable(0);
-
-                                             this.addClass('famous-scrollable');
-        // if (!this.options.scrollbar)         this.addClass('disable-scrollbar');
-        // if (this.options.backfaceVisibility) this.addClass('backfaceVisibility');
+        if (options) this.setOptions(options);
+        
+        this.addClass('famous-scrollable');
 
         this._scrollableEl;
         this.on('deploy', function () {
@@ -42,13 +39,14 @@ define(function(require, exports, module) {
         }.bind(this));
 
         this._sequence = new SequentialLayout({
+            direction: this.options.direction
         });
 
         this.add(this._sequence);
     }
 
     NativeScrollview.DEFAULT_OPTIONS = {
-        direction: 'Y',
+        direction: 'x',
         scrollbar: true
     }
 
@@ -65,49 +63,17 @@ define(function(require, exports, module) {
     }
 
     /**
-     * Before rendering, NativeScrollview updates scroll position if necessary.
+     * Overrides default options of the NativeScrollview if necessary.
      *
-     * @method render
+     * @method setOptions
+     * @param {Object} [options] options to be set.
      */
-    NativeScrollview.prototype.render = function () {
-        if(this._animating) this._updateScrollPos();
+    NativeScrollview.prototype.setOptions = function setOptions(options) {
+        if (options.direction !== undefined) this.options.direction = options.direction;
+        if (options.direction !== undefined) this.options.scrollbar = options.scrollbar;
 
-        return ContainerSurface.prototype.render.call(this);
-    }
-
-    /**
-     * Called on render.  Updates scrollTop and scrollLeft properties of DOM element
-     * with scrollX and scrollY transitionable values.
-     *
-     * @method _updateScrollPos
-     */
-    NativeScrollview.prototype._updateScrollPos = function () {
-        if(!this._scrollableEl) return;
-
-        var updatedX = this._scrollX.get();
-        var updatedY = this._scrollY.get();
-
-        if(this._scrollableEl.scrollLeft !== updatedX) {
-            this._scrollableEl.scrollLeft = updatedX;
-        }
-        if(this._scrollableEl.scrollTop !== updatedY){
-            this._scrollableEl.scrollTop = updatedY;
-        }
-    }
-
-    /**
-     * Sets the vertical scroll position of the NativeScrollview.
-     *
-     * @method setVScrollPosition
-     * @param {Object} [options] new y value and optional transition and callback for animation
-     */
-    NativeScrollview.prototype.setVScrollPosition = function(y, transition, callback) {
-        if(!this._animating) this._animating++;
-
-        var wrapped = _wrapCallback.call(this, callback);
-
-        this._scrollY.set(y, transition, wrapped);
-    }
+        ContainerSurface.prototype.setOptions.call(this, options);
+    };
 
     /**
      * Returns the current Y scroll progress of the UIScrollContaienr
@@ -115,21 +81,9 @@ define(function(require, exports, module) {
      * @method getVScrollPosition
      */
     NativeScrollview.prototype.getVScrollPosition =  function () {
-        return this._scrollY.get();
-    }
+        if(!this._scrollableEl) return null;
 
-    /**
-     * Sets the horizontal scroll position of the NativeScrollview.
-     *
-     * @method setHScrollPosition
-     * @param {Object} [options] new x value and optional transition and callback for animation
-     */
-    NativeScrollview.prototype.setHScrollPosition = function(x, transition, callback) {
-        if(!this._animating) this._animating++;
-
-        var wrapped = _wrapCallback.call(this, callback);
-
-        this._scrollX.set(x, transition, wrapped);
+        return this._scrollableEl.scrollTop;
     }
 
     /**
@@ -138,7 +92,9 @@ define(function(require, exports, module) {
      * @method getVScrollPosition
      */
     NativeScrollview.prototype.getHScrollPosition = function () {
-        return this._scrollX.get();    
+        if(!this._scrollableEl) return null;
+
+        return this._scrollableEl.scrollLeft;
     }
 
     /**
@@ -146,11 +102,10 @@ define(function(require, exports, module) {
      *
      * @method getMaxVScrollPosition
      */
-    //TODO: find a solution to the DOM loading issue.
     NativeScrollview.prototype.getMaxVScrollPosition = function () {
-        if(!this._scrollableEl) return console.log('Container is not yet loaded.');
+        if(!this._scrollableEl) return null;
 
-        return this._scrollableEl.scrollTop - this.getSize()[1];
+        return this._scrollableEl.scrollTop - this._size[1];
     }
 
     /**
@@ -159,17 +114,9 @@ define(function(require, exports, module) {
      * @method getMaxHScrollPosition
      */
     NativeScrollview.prototype.getMaxHScrollPosition = function () {
-        if(!this._scrollableEl) return console.log('Container is not yet loaded.');
+        if(!this._scrollableEl) return null;
 
-        return this._scrollableEl.scrollLeft - this.getSize()[0];        
-    }
-    
-
-    function _wrapCallback (callback) {
-        return function () {
-            if(callback) callback();
-            this._animating--;
-        }.bind(this);
+        return this._scrollableEl.scrollLeft - this._size[0];
     }
 
     module.exports = NativeScrollview;

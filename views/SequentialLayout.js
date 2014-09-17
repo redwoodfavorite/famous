@@ -78,6 +78,11 @@ define(function(require, exports, module) {
      * @chainable
      */
     SequentialLayout.prototype.setOptions = function setOptions(options) {
+        if (options.direction !== undefined) {
+            if (options.direction === 'x') options.direction = Utility.Direction.X;
+            else if (options.direction === 'y') options.direction = Utility.Direction.Y;
+        }
+
         this.optionsManager.setOptions.apply(this.optionsManager, arguments);
         return this;
     };
