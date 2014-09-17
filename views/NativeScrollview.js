@@ -60,7 +60,7 @@ define(function(require, exports, module) {
      */
     NativeScrollview.prototype.sequenceFrom = function (nodeArray) {
         this._sequence.sequenceFrom(nodeArray);
-    }
+    };
 
     /**
      * Overrides default options of the NativeScrollview if necessary.
@@ -103,9 +103,7 @@ define(function(require, exports, module) {
      * @method getMaxVScrollPosition
      */
     NativeScrollview.prototype.getMaxVScrollPosition = function () {
-        if(!this._scrollableEl) return null;
-
-        return this._scrollableEl.scrollTop - this._size[1];
+        return this._sequence.getSize()[1];
     }
 
     /**
@@ -114,9 +112,7 @@ define(function(require, exports, module) {
      * @method getMaxHScrollPosition
      */
     NativeScrollview.prototype.getMaxHScrollPosition = function () {
-        if(!this._scrollableEl) return null;
-
-        return this._scrollableEl.scrollLeft - this._size[0];
+        return this._sequence.getSize()[0];
     }
 
     module.exports = NativeScrollview;
